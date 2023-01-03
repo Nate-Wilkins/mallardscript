@@ -1,6 +1,6 @@
 [package]
 name = "mallardscript"
-version = "1.0.0"
+version = "2.0.0"
 description = "Hak5 DuckyScript extended language compiler."
 license-file = "LICENSE"
 documentation = "https://github.com/Nate-Wilkins/mallardscript"
@@ -10,7 +10,7 @@ authors = ["nate-wilkins <nate-wilkins@code-null.com>"]
 
 [dependencies]
 anyhow = "1.0.38"
-pest_duckyscript = "5.0.0"
+pest_duckyscript = "6.0.0"
 log = "0.4.17"
 clap = "2.33.1"
 clap_complete = "4.0.7"
