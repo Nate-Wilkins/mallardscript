@@ -1,0 +1,19 @@
+{
+  "configurations": {
+    "launch": {
+      "adapter": "CodeLLDB",
+      "variables": {},
+      "filetypes": ["rust"],
+      "configuration": {
+        "request": "launch",
+        "program": "cargo run"
+      },
+      "breakpoints": {
+        "exception": {
+          "caught": "",
+          "uncaught": "Y"
+        }
+      }
+    }
+  }
+}
