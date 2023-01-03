@@ -29,7 +29,7 @@ fn test_command_completions_type_zsh() -> Result<(), Box<dyn std::error::Error>>
 }
 
 #[test]
-fn test_command_build_duckyscript_commands_rem_only() -> Result<(), Box<dyn std::error::Error>> {
+fn test_command_build_duckyscript_valid_rem_only() -> Result<(), Box<dyn std::error::Error>> {
     // Given the CLI.
     let mut cmd = Command::cargo_bin("mallardscript")?;
 
@@ -50,7 +50,7 @@ REM Good luck.
     let temp_output_path = tempdir().unwrap();
     let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
 
-    // When the user generates completions for zsh.
+    // When the user builds the script.
     let result = cmd
         .arg("build")
         .arg("--input")
@@ -91,8 +91,8 @@ REM Good luck."#,
 }
 
 #[test]
-fn test_command_build_duckyscript_commands_rem_string_only(
-) -> Result<(), Box<dyn std::error::Error>> {
+fn test_command_build_duckyscript_valid_rem_string_only() -> Result<(), Box<dyn std::error::Error>>
+{
     // Given the CLI.
     let mut cmd = Command::cargo_bin("mallardscript")?;
 
@@ -112,7 +112,7 @@ STRING Typing Typing Typing...
     let temp_output_path = tempdir().unwrap();
     let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
 
-    // When the user generates completions for zsh.
+    // When the user builds the script.
     let result = cmd
         .arg("build")
         .arg("--input")
@@ -152,7 +152,7 @@ STRING Typing Typing Typing..."#,
 }
 
 #[test]
-fn test_command_build_duckyscript_commands_rem_string_variable_only(
+fn test_command_build_duckyscript_valid_rem_string_variable_only(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Given the CLI.
     let mut cmd = Command::cargo_bin("mallardscript")?;
@@ -164,7 +164,7 @@ fn test_command_build_duckyscript_commands_rem_string_variable_only(
             r#"
 REM Hello, Friend.
 STRING Typing Typing Typing...
-$MY_VARIABLE = 34
+VAR $MY_VARIABLE = 34
 "#,
         )
         .as_bytes(),
@@ -174,7 +174,7 @@ $MY_VARIABLE = 34
     let temp_output_path = tempdir().unwrap();
     let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
 
-    // When the user generates completions for zsh.
+    // When the user builds the script.
     let result = cmd
         .arg("build")
         .arg("--input")
@@ -208,14 +208,14 @@ Done."#,
         output_contents,
         r#"REM Hello, Friend.
 STRING Typing Typing Typing...
-$MY_VARIABLE = 34"#,
+VAR $MY_VARIABLE = 34"#,
     );
 
     return Ok(());
 }
 
 #[test]
-fn test_command_build_duckyscript_commands_rem_string_single_import_only(
+fn test_command_build_duckyscript_valid_rem_string_single_import_only(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Given the CLI.
     let mut cmd = Command::cargo_bin("mallardscript")?;
@@ -242,7 +242,7 @@ IMPORT {}
     let temp_output_path = tempdir().unwrap();
     let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
 
-    // When the user generates completions for zsh.
+    // When the user builds the script.
     let result = cmd
         .arg("build")
         .arg("--input")
@@ -283,7 +283,7 @@ STRING Typing Typing Typing..."#,
 }
 
 #[test]
-fn test_command_build_duckyscript_commands_rem_string_multiple_import_only(
+fn test_command_build_duckyscript_valid_rem_string_multiple_import_only(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Given the CLI.
     let mut cmd = Command::cargo_bin("mallardscript")?;
@@ -322,7 +322,7 @@ IMPORT {}
     let temp_output_path = tempdir().unwrap();
     let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
 
-    // When the user generates completions for zsh.
+    // When the user builds the script.
     let result = cmd
         .arg("build")
         .arg("--input")
@@ -364,7 +364,7 @@ STRING Typing From B..."#,
 }
 
 #[test]
-fn test_command_build_duckyscript_commands_circular_dependency_imports(
+fn test_command_build_duckyscript_invalid_circular_dependency_imports(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Given the CLI.
     let mut cmd = Command::cargo_bin("mallardscript")?;
@@ -427,7 +427,7 @@ IMPORT {}
     let temp_output_path = tempdir().unwrap();
     let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
 
-    // When the user generates completions for zsh.
+    // When the user builds the script.
     let result = cmd
         .arg("build")
         .arg("--input")
@@ -464,6 +464,154 @@ IMPORT {}
         output_contents,
         r#"REM Hello, Friend.
 STRING Typing From A...
+"#,
+    );
+
+    return Ok(());
+}
+
+#[test]
+fn test_command_build_duckyscript_invalid_delay() -> Result<(), Box<dyn std::error::Error>> {
+    // Given the CLI.
+    let mut cmd = Command::cargo_bin("mallardscript")?;
+
+    // And DuckyScript file with DELAY that is invalid.
+    let mut input_file = NamedTempFile::new()?;
+    input_file.write_all(
+        String::from(
+            r#"
+DEALAY 3000
+"#,
+        )
+        .as_bytes(),
+    )?;
+
+    // And an output directory.
+    let temp_output_path = tempdir().unwrap();
+    let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
+
+    // When the user builds the script.
+    let result = cmd
+        .arg("build")
+        .arg("--input")
+        .arg(input_file.path())
+        .arg("--output")
+        .arg(output_path)
+        .assert();
+
+    result
+        // Then errors occurred.
+        .failure()
+        .stdout(predicate::str::contains(format!(
+            r#"Build MallardScript.
+  Input: '{}'
+  Output: '{}'
+"#,
+            input_file.path().display(),
+            String::from(output_path)
+        )))
+        // Then the build failed.
+        .stderr(
+            predicate::str::is_match("Failed to compile to output file '.+index\\.ducky'\\.")
+                .unwrap(),
+        )
+        .stderr(predicate::str::is_match("0: Unable to parse input\\.").unwrap())
+        .stderr(predicate::str::is_match("1: Unable to parse provided document\\.").unwrap())
+        .stderr(
+            predicate::str::is_match(
+                "2:  --> 2:1
+     |
+   2 | DEALAY 3000
+     | ^---
+     |
+     = expected EOI, keyword_command, or statement_variable",
+            )
+            .unwrap(),
+        );
+
+    // Then the build output is correct.
+    let mut output_file_path =
+        std::path::PathBuf::from(shellexpand::tilde(output_path).into_owned());
+    output_file_path.push("index.ducky");
+
+    let output_contents = std::fs::read_to_string(output_file_path).unwrap();
+    println!("{:?}", output_contents);
+    assert_eq!(output_contents, r#""#,);
+
+    return Ok(());
+}
+
+#[test]
+fn test_command_build_duckyscript_invalid_import_not_found(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Given the CLI.
+    let mut cmd = Command::cargo_bin("mallardscript")?;
+
+    // And DuckyScript file with REM and IMPORT command that is not found.
+    let mut input_file = NamedTempFile::new()?;
+    input_file.write_all(
+        String::from(
+            r#"
+REM Hello, Friend.
+IMPORT ./__non_existant.ducky
+"#,
+        )
+        .as_bytes(),
+    )?;
+
+    // And an output directory.
+    let temp_output_path = tempdir().unwrap();
+    let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
+
+    // When the user builds the script.
+    let result = cmd
+        .arg("build")
+        .arg("--input")
+        .arg(input_file.path())
+        .arg("--output")
+        .arg(output_path)
+        .assert();
+
+    result
+        // Then errors occurred.
+        .failure()
+        .stdout(predicate::str::contains(format!(
+            r#"Build MallardScript.
+  Input: '{}'
+  Output: '{}'
+"#,
+            input_file.path().display(),
+            String::from(output_path)
+        )))
+        // Then the build failed.
+        .stderr(
+            predicate::str::is_match("Failed to compile to output file '.+index\\.ducky'\\.")
+                .unwrap(),
+        )
+        .stderr(
+            predicate::str::is_match(
+                "0: Unable to import file '\\./__non_existant\\.ducky' from '.+'\\.",
+            )
+            .unwrap(),
+        )
+        .stderr(
+            predicate::str::is_match(
+                "1: Unable to load file input '\\./__non_existant\\.ducky'\\.",
+            )
+            .unwrap(),
+        )
+        .stderr(predicate::str::is_match("2: No such file or directory \\(os error 2\\)").unwrap());
+
+    // Then the build output is correct.
+    let mut output_file_path =
+        std::path::PathBuf::from(shellexpand::tilde(output_path).into_owned());
+    output_file_path.push("index.ducky");
+
+    let output_contents = std::fs::read_to_string(output_file_path).unwrap();
+    println!("{:?}", output_contents);
+    assert_eq!(
+        output_contents,
+        r#"REM Hello, Friend.
 "#,
     );
 

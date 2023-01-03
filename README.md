@@ -49,3 +49,6 @@ Written in rust. Workflows are defined in `.envrc.sh`.
 
 - Badges
 - Configuration file like `.mallardscriptrc`
+- Source errors would be really nice to have.
+  Can be implemented with [miette](https://crates.io/crates/miette).
+  Also view [pest miette](https://github.com/pest-parser/pest/issues/582).

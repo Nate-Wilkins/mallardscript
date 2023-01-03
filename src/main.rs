@@ -16,7 +16,7 @@ fn main() -> Result<()> {
 
     // Run the application.
     if let Err(e) = run(args) {
-        eprintln!("{}", e);
+        eprintln!("{:?}", e);
         std::process::exit(2);
     }
     std::process::exit(0);
@@ -261,8 +261,11 @@ fn compile_input(
                 // Process all variable statements.
                 output_file
                     .write_all(
-                        String::from(format!("${} = {}\n", variable.name, variable.assignment))
-                            .as_bytes(),
+                        String::from(format!(
+                            "VAR ${} = {}\n",
+                            variable.name, variable.assignment
+                        ))
+                        .as_bytes(),
                     )
                     .context(format!("Unable to write to output file."))
                     .unwrap();

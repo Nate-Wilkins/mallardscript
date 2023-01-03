@@ -363,7 +363,7 @@ dependencies = [
 
 [[package]]
 name = "mallardscript"
-version = "2.0.0"
+version = "3.0.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -442,9 +442,9 @@ dependencies = [
 
 [[package]]
 name = "pest_duckyscript"
-version = "6.0.0"
+version = "8.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37d7c165fdc27ce8243d0695a57d6d3a11e7c3f72255800a7d98a254329f8ed7"
+checksum = "d2a376d76c6ae27f661182516fce994f3245e2412e7d13882833a638422e73af"
 dependencies = [
  "anyhow",
  "pest",
