@@ -14,6 +14,14 @@
 cargo install mallardscript
 ```
 
+## Usage
+
+Compiles [MallardScript](https://github.com/Nate-Wilkins/pest_duckyscript) to DuckyScript!
+
+```
+mallardscript --input src/index.ducky --output output/index.ducky
+```
+
 ## Configuration
 
 ### Shell Completions
