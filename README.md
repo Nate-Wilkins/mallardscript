@@ -19,7 +19,7 @@ cargo install mallardscript
 Compiles [MallardScript](https://github.com/Nate-Wilkins/pest_duckyscript) to DuckyScript!
 
 ```
-mallardscript --input src/index.ducky --output output/index.ducky
+mallardscript build --input src/index.ducky --output output/index.ducky
 ```
 
 ## Configuration
@@ -47,7 +47,7 @@ Written in rust. Workflows are defined in `.envrc.sh`.
 
 ## Roadmap
 
-- Badges
+- Support for relative paths to import source.
 - Configuration file like `.mallardscriptrc`
 - Source errors would be really nice to have.
   Can be implemented with [miette](https://crates.io/crates/miette).
