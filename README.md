@@ -47,8 +47,8 @@ Written in rust. Workflows are defined in `.envrc.sh`.
 
 ## Roadmap
 
-- Support for relative paths to import source.
-- Configuration file like `.mallardscriptrc`
+- Encode directly (or by library ref) in this project, so users don't have to compile twice.
+- Configuration file like `.mallardscriptrc`.
 - Source errors would be really nice to have.
   Can be implemented with [miette](https://crates.io/crates/miette).
   Also view [pest miette](https://github.com/pest-parser/pest/issues/582).
