@@ -66,10 +66,11 @@ REM Good luck.
         // Then the build completed successfully.
         .stdout(predicate::str::contains(format!(
             r#"Build MallardScript.
+  Current Directory: '{}'
   Input: '{}'
   Output: '{}'
-
 Done."#,
+            std::env::current_dir().unwrap().display(),
             input_file.path().display(),
             String::from(output_path)
         )));
@@ -128,10 +129,11 @@ STRING Typing Typing Typing...
         // Then the build completed successfully.
         .stdout(predicate::str::contains(format!(
             r#"Build MallardScript.
+  Current Directory: '{}'
   Input: '{}'
   Output: '{}'
-
 Done."#,
+            std::env::current_dir().unwrap().display(),
             input_file.path().display(),
             String::from(output_path)
         )));
@@ -190,10 +192,11 @@ VAR $MY_VARIABLE = 34
         // Then the build completed successfully.
         .stdout(predicate::str::contains(format!(
             r#"Build MallardScript.
+  Current Directory: '{}'
   Input: '{}'
   Output: '{}'
-
 Done."#,
+            std::env::current_dir().unwrap().display(),
             input_file.path().display(),
             String::from(output_path)
         )));
@@ -258,10 +261,11 @@ IMPORT {}
         // Then the build completed successfully.
         .stdout(predicate::str::contains(format!(
             r#"Build MallardScript.
+  Current Directory: '{}'
   Input: '{}'
   Output: '{}'
-
 Done."#,
+            std::env::current_dir().unwrap().display(),
             input_file.path().display(),
             String::from(output_path)
         )));
@@ -338,10 +342,11 @@ IMPORT {}
         // Then the build completed successfully.
         .stdout(predicate::str::contains(format!(
             r#"Build MallardScript.
+  Current Directory: '{}'
   Input: '{}'
   Output: '{}'
-
 Done."#,
+            std::env::current_dir().unwrap().display(),
             input_file.path().display(),
             String::from(output_path)
         )));
@@ -441,9 +446,11 @@ IMPORT {}
         .failure()
         .stdout(predicate::str::contains(format!(
             r#"Build MallardScript.
+  Current Directory: '{}'
   Input: '{}'
   Output: '{}'
 "#,
+            std::env::current_dir().unwrap().display(),
             input_file.path().display(),
             String::from(output_path)
         )))
@@ -465,6 +472,102 @@ IMPORT {}
         r#"REM Hello, Friend.
 STRING Typing From A...
 "#,
+    );
+
+    return Ok(());
+}
+
+#[test]
+fn test_command_build_duckyscript_valid_multiple_rem_string_import_relative_only(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Given the CLI.
+    let mut cmd = Command::cargo_bin("mallardscript")?;
+
+    // And DuckyScript file dependency A with STRING commands only.
+    let mut input_file_dependency_a = NamedTempFile::new()?;
+    input_file_dependency_a.write_all(String::from(r#"STRING Typing From A..."#).as_bytes())?;
+    let input_file_path_dependency_a = input_file_dependency_a.path();
+    let input_file_path_buffer_dependency_a = input_file_path_dependency_a.to_path_buf();
+    let input_file_name_dependency_a = input_file_path_buffer_dependency_a
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap();
+
+    // And DuckyScript file dependency B with STRING and IMPORT commands only.
+    let mut input_file_dependency_b = NamedTempFile::new()?;
+    input_file_dependency_b.write_all(
+        String::from(format!(
+            r#"
+IMPORT ./{}
+STRING Typing From B...
+"#,
+            input_file_name_dependency_a
+        ))
+        .as_bytes(),
+    )?;
+    let input_file_path_dependency_b = input_file_dependency_b.path();
+    let input_file_path_buffer_dependency_b = input_file_path_dependency_b.to_path_buf();
+    let input_file_name_dependency_b = input_file_path_buffer_dependency_b
+        .file_name()
+        .unwrap()
+        .to_str()
+        .unwrap();
+
+    // And DuckyScript file with REM and IMPORT commands.
+    let mut input_file = NamedTempFile::new()?;
+    input_file.write_all(
+        String::from(format!(
+            r#"
+REM Hello, Friend.
+IMPORT ./{}
+"#,
+            input_file_name_dependency_b
+        ))
+        .as_bytes(),
+    )?;
+
+    // And an output directory.
+    let temp_output_path = tempdir().unwrap();
+    let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
+
+    // When the user builds the script.
+    let result = cmd
+        .arg("build")
+        .arg("--input")
+        .arg(input_file.path())
+        .arg("--output")
+        .arg(output_path)
+        .assert();
+
+    result
+        // Then no errors occurred.
+        .success()
+        .stderr(predicate::str::is_empty())
+        // Then the build completed successfully.
+        .stdout(predicate::str::contains(format!(
+            r#"Build MallardScript.
+  Current Directory: '{}'
+  Input: '{}'
+  Output: '{}'
+Done."#,
+            std::env::current_dir().unwrap().display(),
+            input_file.path().display(),
+            String::from(output_path)
+        )));
+
+    // Then the build output is correct.
+    let mut output_file_path =
+        std::path::PathBuf::from(shellexpand::tilde(output_path).into_owned());
+    output_file_path.push("index.ducky");
+
+    let output_contents = std::fs::read_to_string(output_file_path).unwrap();
+    println!("{:?}", output_contents);
+    assert_eq!(
+        output_contents,
+        r#"REM Hello, Friend.
+STRING Typing From A...
+STRING Typing From B..."#,
     );
 
     return Ok(());
@@ -504,9 +607,11 @@ DEALAY 3000
         .failure()
         .stdout(predicate::str::contains(format!(
             r#"Build MallardScript.
+  Current Directory: '{}'
   Input: '{}'
   Output: '{}'
 "#,
+            std::env::current_dir().unwrap().display(),
             input_file.path().display(),
             String::from(output_path)
         )))
@@ -577,9 +682,11 @@ IMPORT ./__non_existant.ducky
         .failure()
         .stdout(predicate::str::contains(format!(
             r#"Build MallardScript.
+  Current Directory: '{}'
   Input: '{}'
   Output: '{}'
 "#,
+            std::env::current_dir().unwrap().display(),
             input_file.path().display(),
             String::from(output_path)
         )))
@@ -596,7 +703,7 @@ IMPORT ./__non_existant.ducky
         )
         .stderr(
             predicate::str::is_match(
-                "1: Unable to load file input '\\./__non_existant\\.ducky'\\.",
+                "1: Unable to find file input '\\./__non_existant\\.ducky' from '.+'\\.",
             )
             .unwrap(),
         )

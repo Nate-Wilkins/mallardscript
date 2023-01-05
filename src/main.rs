@@ -4,6 +4,7 @@ extern crate pest_duckyscript;
 use anyhow::{anyhow, Context, Result};
 use pest_duckyscript::{duckyscript, mallardscript};
 use std::io::Write;
+use std::path::PathBuf;
 use std::{collections::HashMap, io::Seek};
 
 /// Entry point for mallardscript.
@@ -141,15 +142,17 @@ fn command_build(args: clap::ArgMatches) -> Result<()> {
     let args_build = args.subcommand_matches("build").unwrap();
     let input = args_build.value_of("input").unwrap();
     let output = args_build.value_of("output").unwrap();
-    let mut output_path = std::path::PathBuf::from(shellexpand::tilde(output).into_owned());
+    let mut output_path = PathBuf::from(shellexpand::tilde(output).into_owned());
     output_path.push("index.ducky");
     let output_file_path = &output_path.clone();
 
+    let current_directory = &std::env::current_dir().unwrap();
+
     // Build.
     println!("Build MallardScript.");
+    println!("  Current Directory: '{}'", current_directory.display());
     println!("  Input: '{}'", input);
     println!("  Output: '{}'", output);
-    println!("");
 
     // Setup.
     let output_file = std::fs::File::create(output_file_path).context(format!(
@@ -158,7 +161,13 @@ fn command_build(args: clap::ArgMatches) -> Result<()> {
     ))?;
 
     // Compile.
-    compile_input(input, &output_file, HashMap::new()).context(format!(
+    compile_input(
+        current_directory.clone(),
+        input,
+        &output_file,
+        &mut HashMap::new(),
+    )
+    .context(format!(
         "Failed to compile to output file '{}'.",
         output_file_path.display()
     ))?;
@@ -184,15 +193,22 @@ fn command_build(args: clap::ArgMatches) -> Result<()> {
 
 /// Compile MallardScript input path to DuckyScript output file.
 fn compile_input(
+    current_directory: PathBuf,
     input_path: &str,
     mut output_file: &std::fs::File,
-    mut imports_visited: HashMap<String, bool>,
+    imports_visited: &mut HashMap<String, bool>,
 ) -> Result<()> {
     log::info!("Compiling '{}'.", input_path);
 
     // Expand our input path.
-    let input_path_expanded =
-        &std::path::PathBuf::from(shellexpand::tilde(input_path).into_owned());
+    let input_path_expanded = std::fs::canonicalize(current_directory.join(input_path))
+        .with_context(|| {
+            format!(
+                "Unable to find file input '{}' from '{}'.",
+                input_path,
+                current_directory.display()
+            )
+        })?;
 
     // Handle Circular Dependencies.
     // Do not compile input, if we've already compiled it before.
@@ -211,10 +227,11 @@ fn compile_input(
     }
 
     // Load input contents.
-    let input_contents = std::fs::read_to_string(input_path_expanded).with_context(|| {
+    let input_contents = std::fs::read_to_string(&input_path_expanded).with_context(|| {
         format!(
-            "Unable to load file input '{}'.",
-            input_path_expanded.display()
+            "Unable to load file input '{}' from '{}'.",
+            input_path_expanded.display(),
+            current_directory.display()
         )
     })?;
 
@@ -231,18 +248,24 @@ fn compile_input(
                 // Process import statement commands.
                 if command.name == "IMPORT" {
                     // Compile import file.
-                    compile_input(&command.value, output_file, imports_visited.clone()).context(
-                        format!(
-                            "Unable to import file '{}' from '{}'.",
-                            command.value, input_path
-                        ),
-                    )?;
+                    // Make sure to get the current working directory so imports can resolve locally.
+                    let mut new_current_directory = input_path_expanded.clone();
+                    new_current_directory.pop();
+                    compile_input(
+                        new_current_directory,
+                        &command.value,
+                        output_file,
+                        imports_visited,
+                    )
+                    .context(format!(
+                        "Unable to import file '{}' from '{}'.",
+                        command.value, input_path
+                    ))?;
 
                     // Add a new line after import file compilation.
                     output_file
                         .write_all(String::from("\n").as_bytes())
-                        .context(format!("Unable to write to output file."))
-                        .unwrap();
+                        .context(format!("Unable to write to output file."))?;
                 } else {
                     // Process all other statement commands.
                     output_file
@@ -250,8 +273,7 @@ fn compile_input(
                             String::from(format!("{} {}\n", command.name, command.value))
                                 .as_bytes(),
                         )
-                        .context(format!("Unable to write to output file."))
-                        .unwrap();
+                        .context(format!("Unable to write to output file."))?;
                 }
             }
 
@@ -267,8 +289,7 @@ fn compile_input(
                         ))
                         .as_bytes(),
                     )
-                    .context(format!("Unable to write to output file."))
-                    .unwrap();
+                    .context(format!("Unable to write to output file."))?;
             }
 
             mallardscript::ast::Statement::End { .. } => {
