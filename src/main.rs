@@ -80,9 +80,9 @@ fn initialize_logger() {
 
 /// Run application according to command line interface arguments.
 fn run(args: clap::ArgMatches) -> Result<()> {
-    if let Some(_) = args.subcommand_matches("completions") {
+    if args.subcommand_matches("completions").is_some() {
         return command_completions(args);
-    } else if let Some(_) = args.subcommand_matches("build") {
+    } else if args.subcommand_matches("build").is_some() {
         return command_build(args);
     }
 
@@ -133,7 +133,7 @@ fn command_completions(args: clap::ArgMatches) -> Result<()> {
         ));
     }
 
-    return Ok(());
+    Ok(())
 }
 
 /// Command to build MallardScript.
@@ -188,7 +188,7 @@ fn command_build(args: clap::ArgMatches) -> Result<()> {
 
     println!("Done.");
 
-    return Ok(());
+    Ok(())
 }
 
 /// Compile MallardScript input path to DuckyScript output file.
@@ -237,7 +237,7 @@ fn compile_input(
 
     // Parse input contents into AST.
     let program_ast = mallardscript::parser::parse_document(input_contents)
-        .with_context(|| format!("Unable to parse input."))?;
+        .with_context(|| ("Unable to parse input."))?;
 
     // Process AST.
     for statement in program_ast {
@@ -265,15 +265,12 @@ fn compile_input(
                     // Add a new line after import file compilation.
                     output_file
                         .write_all(String::from("\n").as_bytes())
-                        .context(format!("Unable to write to output file."))?;
+                        .context("Unable to write to output file.")?;
                 } else {
                     // Process all other statement commands.
                     output_file
-                        .write_all(
-                            String::from(format!("{} {}\n", command.name, command.value))
-                                .as_bytes(),
-                        )
-                        .context(format!("Unable to write to output file."))?;
+                        .write_all(format!("{} {}\n", command.name, command.value).as_bytes())
+                        .context("Unable to write to output file.")?;
                 }
             }
 
@@ -283,13 +280,9 @@ fn compile_input(
                 // Process all variable statements.
                 output_file
                     .write_all(
-                        String::from(format!(
-                            "VAR ${} = {}\n",
-                            variable.name, variable.assignment
-                        ))
-                        .as_bytes(),
+                        (format!("VAR ${} = {}\n", variable.name, variable.assignment)).as_bytes(),
                     )
-                    .context(format!("Unable to write to output file."))?;
+                    .context("Unable to write to output file.")?;
             }
 
             mallardscript::ast::Statement::End { .. } => {
@@ -311,5 +304,5 @@ fn compile_input(
         }
     }
 
-    return Ok(());
+    Ok(())
 }
