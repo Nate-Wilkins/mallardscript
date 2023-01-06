@@ -6,10 +6,13 @@
       "filetypes": ["rust"],
       "configuration": {
         "request": "launch",
-        "program": "cargo run"
+        "stopOnEntry": false,
+        "program": "${workspaceRoot}/target/debug/mallardscript"
       },
       "breakpoints": {
         "exception": {
+          "cpp_throw": "Y",
+          "cpp_catch": "N",
           "caught": "",
           "uncaught": "Y"
         }
