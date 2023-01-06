@@ -25,7 +25,7 @@ fn test_command_completions_type_zsh() -> Result<(), Box<dyn std::error::Error>>
         // Then completions for zsh were outputted.
         .stdout(predicate::str::contains("#compdef mallardscript"));
 
-    return Ok(());
+    Ok(())
 }
 
 #[test]
@@ -88,7 +88,7 @@ REM This is it.
 REM Good luck."#,
     );
 
-    return Ok(());
+    Ok(())
 }
 
 #[test]
@@ -150,7 +150,7 @@ Done."#,
 STRING Typing Typing Typing..."#,
     );
 
-    return Ok(());
+    Ok(())
 }
 
 #[test]
@@ -214,7 +214,7 @@ STRING Typing Typing Typing...
 VAR $MY_VARIABLE = 34"#,
     );
 
-    return Ok(());
+    Ok(())
 }
 
 #[test]
@@ -231,13 +231,13 @@ fn test_command_build_duckyscript_valid_rem_string_single_import_only(
     // And DuckyScript file with REM and IMPORT commands.
     let mut input_file = NamedTempFile::new()?;
     input_file.write_all(
-        String::from(format!(
+        format!(
             r#"
 REM Hello, Friend.
 IMPORT {}
 "#,
             input_file_dependency.path().as_os_str().to_str().unwrap()
-        ))
+        )
         .as_bytes(),
     )?;
 
@@ -283,7 +283,7 @@ Done."#,
 STRING Typing Typing Typing..."#,
     );
 
-    return Ok(());
+    Ok(())
 }
 
 #[test]
@@ -299,26 +299,26 @@ fn test_command_build_duckyscript_valid_rem_string_multiple_import_only(
     // And DuckyScript file dependency B with STRING and IMPORT commands only.
     let mut input_file_dependency_b = NamedTempFile::new()?;
     input_file_dependency_b.write_all(
-        String::from(format!(
+        format!(
             r#"
 IMPORT {}
 STRING Typing From B...
 "#,
             input_file_dependency_a.path().as_os_str().to_str().unwrap()
-        ))
+        )
         .as_bytes(),
     )?;
 
     // And DuckyScript file with REM and IMPORT commands.
     let mut input_file = NamedTempFile::new()?;
     input_file.write_all(
-        String::from(format!(
+        format!(
             r#"
 REM Hello, Friend.
 IMPORT {}
 "#,
             input_file_dependency_b.path().as_os_str().to_str().unwrap()
-        ))
+        )
         .as_bytes(),
     )?;
 
@@ -365,7 +365,7 @@ STRING Typing From A...
 STRING Typing From B..."#,
     );
 
-    return Ok(());
+    Ok(())
 }
 
 #[test]
@@ -381,50 +381,50 @@ fn test_command_build_duckyscript_invalid_circular_dependency_imports(
 
     // And DuckyScript file dependency A with STRING and IMPORT C.
     input_file_dependency_a.write_all(
-        String::from(format!(
+        format!(
             r#"
 STRING Typing From A...
 IMPORT {}
 "#,
             input_file_dependency_c.path().as_os_str().to_str().unwrap()
-        ))
+        )
         .as_bytes(),
     )?;
 
     // And DuckyScript file dependency B with STRING and IMPORT A.
     input_file_dependency_b.write_all(
-        String::from(format!(
+        format!(
             r#"
 IMPORT {}
 STRING Typing From B...
 "#,
             input_file_dependency_a.path().as_os_str().to_str().unwrap()
-        ))
+        )
         .as_bytes(),
     )?;
 
     // And DuckyScript file dependency C with STRING and IMPORT A.
     input_file_dependency_c.write_all(
-        String::from(format!(
+        format!(
             r#"
 IMPORT {}
 STRING Typing From C...
 "#,
             input_file_dependency_a.path().as_os_str().to_str().unwrap()
-        ))
+        )
         .as_bytes(),
     )?;
 
     // And DuckyScript file with REM and IMPORT commands.
     let mut input_file = NamedTempFile::new()?;
     input_file.write_all(
-        String::from(format!(
+        format!(
             r#"
 REM Hello, Friend.
 IMPORT {}
 "#,
             input_file_dependency_b.path().as_os_str().to_str().unwrap()
-        ))
+        )
         .as_bytes(),
     )?;
 
@@ -474,7 +474,7 @@ STRING Typing From A...
 "#,
     );
 
-    return Ok(());
+    Ok(())
 }
 
 #[test]
@@ -497,13 +497,13 @@ fn test_command_build_duckyscript_valid_multiple_rem_string_import_relative_only
     // And DuckyScript file dependency B with STRING and IMPORT commands only.
     let mut input_file_dependency_b = NamedTempFile::new()?;
     input_file_dependency_b.write_all(
-        String::from(format!(
+        format!(
             r#"
 IMPORT ./{}
 STRING Typing From B...
 "#,
             input_file_name_dependency_a
-        ))
+        )
         .as_bytes(),
     )?;
     let input_file_path_dependency_b = input_file_dependency_b.path();
@@ -517,13 +517,13 @@ STRING Typing From B...
     // And DuckyScript file with REM and IMPORT commands.
     let mut input_file = NamedTempFile::new()?;
     input_file.write_all(
-        String::from(format!(
+        format!(
             r#"
 REM Hello, Friend.
 IMPORT ./{}
 "#,
             input_file_name_dependency_b
-        ))
+        )
         .as_bytes(),
     )?;
 
@@ -570,7 +570,7 @@ STRING Typing From A...
 STRING Typing From B..."#,
     );
 
-    return Ok(());
+    Ok(())
 }
 
 #[test]
@@ -643,7 +643,7 @@ DEALAY 3000
     println!("{:?}", output_contents);
     assert_eq!(output_contents, r#""#,);
 
-    return Ok(());
+    Ok(())
 }
 
 #[test]
@@ -722,5 +722,5 @@ IMPORT ./__non_existant.ducky
 "#,
     );
 
-    return Ok(());
+    Ok(())
 }
