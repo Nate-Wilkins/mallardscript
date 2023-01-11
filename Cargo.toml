@@ -1,6 +1,6 @@
 [package]
 name = "mallardscript"
-version = "6.0.0"
+version = "7.0.0"
 description = "Hak5 DuckyScript extended language compiler."
 license-file = "LICENSE"
 documentation = "https://github.com/Nate-Wilkins/mallardscript"

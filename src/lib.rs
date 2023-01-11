@@ -143,38 +143,34 @@ fn compile_statement(
         mallardscript::ast::Statement::CommandKey(command) => {
             fn collect_command_key_values(
                 command_key: mallardscript::ast::StatementCommandKey,
-            ) -> String {
+            ) -> Vec<String> {
                 // Collect all command key statement command key values.
-                let command_key_statements_reduced = command_key.statements.into_iter().fold(
-                    String::from(""),
-                    |accumulation, statement| {
+                let mut command_key_statements_reduced = command_key.statements.into_iter().fold(
+                    vec![] as Vec<String>,
+                    |mut accumulation, statement| {
                         if let mallardscript::ast::Statement::CommandKey(statement_command_key) =
                             statement
                         {
-                            return accumulation
-                                + &collect_command_key_values(statement_command_key);
+                            accumulation.extend(collect_command_key_values(statement_command_key));
                         } else if let mallardscript::ast::Statement::CommandKeyValue(
                             statement_command_key_value,
                         ) = statement
                         {
-                            return accumulation + &statement_command_key_value.name;
+                            accumulation.push(statement_command_key_value.name);
                         }
 
                         accumulation
                     },
                 );
 
-                let command_key_remaining_keys = format!(" {}", command_key.remaining_keys);
+                if !command_key.remaining_keys.is_empty() {
+                    command_key_statements_reduced.push(command_key.remaining_keys);
+                }
 
                 command_key_statements_reduced
-                    + if command_key.remaining_keys.is_empty() {
-                        ""
-                    } else {
-                        &command_key_remaining_keys
-                    }
             }
 
-            let command_reduced = collect_command_key_values(command);
+            let command_reduced = collect_command_key_values(command).join(" ");
             compile_simple_statement(output_file, indentation, command_reduced, None)?;
         }
         mallardscript::ast::Statement::CommandRem(command) => {
