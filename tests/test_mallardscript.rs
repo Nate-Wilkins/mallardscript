@@ -234,7 +234,7 @@ fn test_command_build_duckyscript_valid_rem_string_single_import_only(
         format!(
             r#"
 REM Hello, Friend.
-IMPORT {}
+IMPORT "{}"
 "#,
             input_file_dependency.path().as_os_str().to_str().unwrap()
         )
@@ -301,7 +301,7 @@ fn test_command_build_duckyscript_valid_rem_string_multiple_import_only(
     input_file_dependency_b.write_all(
         format!(
             r#"
-IMPORT {}
+IMPORT "{}"
 STRING Typing From B...
 "#,
             input_file_dependency_a.path().as_os_str().to_str().unwrap()
@@ -315,7 +315,7 @@ STRING Typing From B...
         format!(
             r#"
 REM Hello, Friend.
-IMPORT {}
+IMPORT "{}"
 "#,
             input_file_dependency_b.path().as_os_str().to_str().unwrap()
         )
@@ -384,7 +384,7 @@ fn test_command_build_duckyscript_invalid_circular_dependency_imports(
         format!(
             r#"
 STRING Typing From A...
-IMPORT {}
+IMPORT "{}"
 "#,
             input_file_dependency_c.path().as_os_str().to_str().unwrap()
         )
@@ -395,7 +395,7 @@ IMPORT {}
     input_file_dependency_b.write_all(
         format!(
             r#"
-IMPORT {}
+IMPORT "{}"
 STRING Typing From B...
 "#,
             input_file_dependency_a.path().as_os_str().to_str().unwrap()
@@ -407,7 +407,7 @@ STRING Typing From B...
     input_file_dependency_c.write_all(
         format!(
             r#"
-IMPORT {}
+IMPORT "{}"
 STRING Typing From C...
 "#,
             input_file_dependency_a.path().as_os_str().to_str().unwrap()
@@ -421,7 +421,7 @@ STRING Typing From C...
         format!(
             r#"
 REM Hello, Friend.
-IMPORT {}
+IMPORT "{}"
 "#,
             input_file_dependency_b.path().as_os_str().to_str().unwrap()
         )
@@ -499,7 +499,7 @@ fn test_command_build_duckyscript_valid_multiple_rem_string_import_relative_only
     input_file_dependency_b.write_all(
         format!(
             r#"
-IMPORT ./{}
+IMPORT "./{}"
 STRING Typing From B...
 "#,
             input_file_name_dependency_a
@@ -520,7 +520,7 @@ STRING Typing From B...
         format!(
             r#"
 REM Hello, Friend.
-IMPORT ./{}
+IMPORT "./{}"
 "#,
             input_file_name_dependency_b
         )
@@ -658,7 +658,7 @@ fn test_command_build_duckyscript_invalid_import_not_found(
         String::from(
             r#"
 REM Hello, Friend.
-IMPORT ./__non_existant.ducky
+IMPORT "./__non_existant.ducky"
 "#,
         )
         .as_bytes(),
