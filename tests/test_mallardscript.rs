@@ -369,6 +369,394 @@ STRING Typing From B..."#,
 }
 
 #[test]
+fn test_command_build_duckyscript_valid_if() -> Result<(), Box<dyn std::error::Error>> {
+    // Given the CLI.
+    let mut cmd = Command::cargo_bin("mallardscript")?;
+
+    // And DuckyScript file with IF commands.
+    let mut input_file = NamedTempFile::new()?;
+    input_file.write_all(
+        String::from(
+            r#"IF TRUE THEN
+  REM Hello, Friend.
+END_IF"#,
+        )
+        .as_bytes(),
+    )?;
+
+    // And an output directory.
+    let temp_output_path = tempdir().unwrap();
+    let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
+
+    // When the user builds the script.
+    let result = cmd
+        .arg("build")
+        .arg("--input")
+        .arg(input_file.path())
+        .arg("--output")
+        .arg(output_path)
+        .assert();
+
+    result
+        // Then no errors occurred.
+        .success()
+        .stderr(predicate::str::is_empty())
+        // Then the build completed successfully.
+        .stdout(predicate::str::contains(format!(
+            r#"Build MallardScript.
+  Current Directory: '{}'
+  Input: '{}'
+  Output: '{}'
+Done."#,
+            std::env::current_dir().unwrap().display(),
+            input_file.path().display(),
+            String::from(output_path)
+        )));
+
+    // Then the build output is correct.
+    let mut output_file_path =
+        std::path::PathBuf::from(shellexpand::tilde(output_path).into_owned());
+    output_file_path.push("index.ducky");
+
+    let output_contents = std::fs::read_to_string(output_file_path).unwrap();
+    assert_eq!(
+        output_contents,
+        r#"IF TRUE THEN
+  REM Hello, Friend.
+END_IF"#,
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_command_build_duckyscript_valid_if_expression() -> Result<(), Box<dyn std::error::Error>> {
+    // Given the CLI.
+    let mut cmd = Command::cargo_bin("mallardscript")?;
+
+    // And DuckyScript file with IF commands.
+    let mut input_file = NamedTempFile::new()?;
+    input_file.write_all(
+        String::from(
+            r#"IF $MY_VARIABLE > 0 && TRUE THEN
+  REM Hello, Friend.
+END_IF"#,
+        )
+        .as_bytes(),
+    )?;
+
+    // And an output directory.
+    let temp_output_path = tempdir().unwrap();
+    let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
+
+    // When the user builds the script.
+    let result = cmd
+        .arg("build")
+        .arg("--input")
+        .arg(input_file.path())
+        .arg("--output")
+        .arg(output_path)
+        .assert();
+
+    result
+        // Then no errors occurred.
+        .success()
+        .stderr(predicate::str::is_empty())
+        // Then the build completed successfully.
+        .stdout(predicate::str::contains(format!(
+            r#"Build MallardScript.
+  Current Directory: '{}'
+  Input: '{}'
+  Output: '{}'
+Done."#,
+            std::env::current_dir().unwrap().display(),
+            input_file.path().display(),
+            String::from(output_path)
+        )));
+
+    // Then the build output is correct.
+    let mut output_file_path =
+        std::path::PathBuf::from(shellexpand::tilde(output_path).into_owned());
+    output_file_path.push("index.ducky");
+
+    let output_contents = std::fs::read_to_string(output_file_path).unwrap();
+    assert_eq!(
+        output_contents,
+        r#"IF $MY_VARIABLE > 0 && TRUE THEN
+  REM Hello, Friend.
+END_IF"#,
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_command_build_duckyscript_valid_if_and_else_expression(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Given the CLI.
+    let mut cmd = Command::cargo_bin("mallardscript")?;
+
+    // And DuckyScript file with IF commands.
+    let mut input_file = NamedTempFile::new()?;
+    input_file.write_all(
+        String::from(
+            r#"IF $MY_VARIABLE > 0 && TRUE THEN
+  REM Hello, Friend.
+ELSE
+  REM Hello, Dog?
+END_IF"#,
+        )
+        .as_bytes(),
+    )?;
+
+    // And an output directory.
+    let temp_output_path = tempdir().unwrap();
+    let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
+
+    // When the user builds the script.
+    let result = cmd
+        .arg("build")
+        .arg("--input")
+        .arg(input_file.path())
+        .arg("--output")
+        .arg(output_path)
+        .assert();
+
+    result
+        // Then no errors occurred.
+        .success()
+        .stderr(predicate::str::is_empty())
+        // Then the build completed successfully.
+        .stdout(predicate::str::contains(format!(
+            r#"Build MallardScript.
+  Current Directory: '{}'
+  Input: '{}'
+  Output: '{}'
+Done."#,
+            std::env::current_dir().unwrap().display(),
+            input_file.path().display(),
+            String::from(output_path)
+        )));
+
+    // Then the build output is correct.
+    let mut output_file_path =
+        std::path::PathBuf::from(shellexpand::tilde(output_path).into_owned());
+    output_file_path.push("index.ducky");
+
+    let output_contents = std::fs::read_to_string(output_file_path).unwrap();
+    assert_eq!(
+        output_contents,
+        r#"IF $MY_VARIABLE > 0 && TRUE THEN
+  REM Hello, Friend.
+ELSE
+  REM Hello, Dog?
+END_IF"#,
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_command_build_duckyscript_valid_if_and_else_nested(
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Given the CLI.
+    let mut cmd = Command::cargo_bin("mallardscript")?;
+
+    // And DuckyScript file with IF commands.
+    let mut input_file = NamedTempFile::new()?;
+    input_file.write_all(
+        String::from(
+            r#"IF $MY_VARIABLE > 0 && TRUE THEN
+  IF TRUE THEN
+    REM Hello, Friend.
+  END_IF
+ELSE
+  IF TRUE THEN
+    REM Hello, Dog?
+  END_IF
+END_IF"#,
+        )
+        .as_bytes(),
+    )?;
+
+    // And an output directory.
+    let temp_output_path = tempdir().unwrap();
+    let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
+
+    // When the user builds the script.
+    let result = cmd
+        .arg("build")
+        .arg("--input")
+        .arg(input_file.path())
+        .arg("--output")
+        .arg(output_path)
+        .assert();
+
+    result
+        // Then no errors occurred.
+        .success()
+        .stderr(predicate::str::is_empty())
+        // Then the build completed successfully.
+        .stdout(predicate::str::contains(format!(
+            r#"Build MallardScript.
+  Current Directory: '{}'
+  Input: '{}'
+  Output: '{}'
+Done."#,
+            std::env::current_dir().unwrap().display(),
+            input_file.path().display(),
+            String::from(output_path)
+        )));
+
+    // Then the build output is correct.
+    let mut output_file_path =
+        std::path::PathBuf::from(shellexpand::tilde(output_path).into_owned());
+    output_file_path.push("index.ducky");
+
+    let output_contents = std::fs::read_to_string(output_file_path).unwrap();
+    assert_eq!(
+        output_contents,
+        r#"IF $MY_VARIABLE > 0 && TRUE THEN
+  IF TRUE THEN
+    REM Hello, Friend.
+  END_IF
+ELSE
+  IF TRUE THEN
+    REM Hello, Dog?
+  END_IF
+END_IF"#,
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_command_build_duckyscript_valid_while() -> Result<(), Box<dyn std::error::Error>> {
+    // Given the CLI.
+    let mut cmd = Command::cargo_bin("mallardscript")?;
+
+    // And DuckyScript file with IF commands.
+    let mut input_file = NamedTempFile::new()?;
+    input_file.write_all(
+        String::from(
+            r#"WHILE TRUE
+  REM Hello, Friend.
+END_WHILE"#,
+        )
+        .as_bytes(),
+    )?;
+
+    // And an output directory.
+    let temp_output_path = tempdir().unwrap();
+    let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
+
+    // When the user builds the script.
+    let result = cmd
+        .arg("build")
+        .arg("--input")
+        .arg(input_file.path())
+        .arg("--output")
+        .arg(output_path)
+        .assert();
+
+    result
+        // Then no errors occurred.
+        .success()
+        .stderr(predicate::str::is_empty())
+        // Then the build completed successfully.
+        .stdout(predicate::str::contains(format!(
+            r#"Build MallardScript.
+  Current Directory: '{}'
+  Input: '{}'
+  Output: '{}'
+Done."#,
+            std::env::current_dir().unwrap().display(),
+            input_file.path().display(),
+            String::from(output_path)
+        )));
+
+    // Then the build output is correct.
+    let mut output_file_path =
+        std::path::PathBuf::from(shellexpand::tilde(output_path).into_owned());
+    output_file_path.push("index.ducky");
+
+    let output_contents = std::fs::read_to_string(output_file_path).unwrap();
+    assert_eq!(
+        output_contents,
+        r#"WHILE TRUE
+  REM Hello, Friend.
+END_WHILE"#,
+    );
+
+    Ok(())
+}
+
+#[test]
+fn test_command_build_duckyscript_valid_while_nested() -> Result<(), Box<dyn std::error::Error>> {
+    // Given the CLI.
+    let mut cmd = Command::cargo_bin("mallardscript")?;
+
+    // And DuckyScript file with IF commands.
+    let mut input_file = NamedTempFile::new()?;
+    input_file.write_all(
+        String::from(
+            r#"WHILE TRUE
+  WHILE TRUE
+    REM Hello, Friend.
+  END_WHILE
+END_WHILE"#,
+        )
+        .as_bytes(),
+    )?;
+
+    // And an output directory.
+    let temp_output_path = tempdir().unwrap();
+    let output_path = temp_output_path.path().as_os_str().to_str().unwrap();
+
+    // When the user builds the script.
+    let result = cmd
+        .arg("build")
+        .arg("--input")
+        .arg(input_file.path())
+        .arg("--output")
+        .arg(output_path)
+        .assert();
+
+    result
+        // Then no errors occurred.
+        .success()
+        .stderr(predicate::str::is_empty())
+        // Then the build completed successfully.
+        .stdout(predicate::str::contains(format!(
+            r#"Build MallardScript.
+  Current Directory: '{}'
+  Input: '{}'
+  Output: '{}'
+Done."#,
+            std::env::current_dir().unwrap().display(),
+            input_file.path().display(),
+            String::from(output_path)
+        )));
+
+    // Then the build output is correct.
+    let mut output_file_path =
+        std::path::PathBuf::from(shellexpand::tilde(output_path).into_owned());
+    output_file_path.push("index.ducky");
+
+    let output_contents = std::fs::read_to_string(output_file_path).unwrap();
+    assert_eq!(
+        output_contents,
+        r#"WHILE TRUE
+  WHILE TRUE
+    REM Hello, Friend.
+  END_WHILE
+END_WHILE"#,
+    );
+
+    Ok(())
+}
+
+#[test]
 fn test_command_build_duckyscript_invalid_circular_dependency_imports(
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Given the CLI.

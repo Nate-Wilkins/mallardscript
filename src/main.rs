@@ -1,11 +1,12 @@
 extern crate anyhow;
+extern crate mallardscript;
 extern crate pest_duckyscript;
 
 use anyhow::{anyhow, Context, Result};
-use pest_duckyscript::{duckyscript, mallardscript};
-use std::io::Write;
+use mallardscript::compile;
+use pest_duckyscript::duckyscript;
+use std::collections::HashMap;
 use std::path::PathBuf;
-use std::{collections::HashMap, io::Seek};
 
 /// Entry point for mallardscript.
 fn main() -> Result<()> {
@@ -161,10 +162,11 @@ fn command_build(args: clap::ArgMatches) -> Result<()> {
     ))?;
 
     // Compile.
-    compile_input(
+    compile(
         current_directory.clone(),
         input,
         &output_file,
+        0,
         &mut HashMap::new(),
     )
     .context(format!(
@@ -187,215 +189,6 @@ fn command_build(args: clap::ArgMatches) -> Result<()> {
     })?;
 
     println!("Done.");
-
-    Ok(())
-}
-
-/// Compile MallardScript simple command to DuckyScript output file.
-fn compile_simple_command(
-    mut output_file: &std::fs::File,
-    command_name: String,
-    command_value: Option<String>,
-) -> Result<()> {
-    if let Some(value) = command_value {
-        log::info!("Processing '{} {}'.", command_name, value);
-
-        output_file
-            .write_all(format!("{} {}\n", command_name, value).as_bytes())
-            .context("Unable to write to output file.")?;
-    } else {
-        // Process all other statement commands.
-        output_file
-            .write_all(format!("{}\n", command_name).as_bytes())
-            .context("Unable to write to output file.")?;
-    }
-
-    Ok(())
-}
-
-/// Compile MallardScript input path to DuckyScript output file.
-fn compile_input(
-    current_directory: PathBuf,
-    input_path: &str,
-    mut output_file: &std::fs::File,
-    imports_visited: &mut HashMap<String, bool>,
-) -> Result<()> {
-    log::info!("Compiling '{}'.", input_path);
-
-    // Expand our input path.
-    let input_path_expanded = std::fs::canonicalize(current_directory.join(input_path))
-        .with_context(|| {
-            format!(
-                "Unable to find file input '{}' from '{}'.",
-                input_path,
-                current_directory.display()
-            )
-        })?;
-
-    // Handle Circular Dependencies.
-    // Do not compile input, if we've already compiled it before.
-    if imports_visited.contains_key(input_path) {
-        return Err(anyhow!("Circular dependency detected."));
-    } else {
-        // Mark import as visited.
-        imports_visited.insert(
-            input_path_expanded
-                .clone()
-                .into_os_string()
-                .into_string()
-                .unwrap(),
-            true,
-        );
-    }
-
-    // Load input contents.
-    let input_contents = std::fs::read_to_string(&input_path_expanded).with_context(|| {
-        format!(
-            "Unable to load file input '{}' from '{}'.",
-            input_path_expanded.display(),
-            current_directory.display()
-        )
-    })?;
-
-    // Parse input contents into AST.
-    let program_ast = mallardscript::parser::parse_document(input_contents)
-        .with_context(|| ("Unable to parse input."))?;
-
-    // Process AST.
-    for statement in program_ast {
-        match statement {
-            mallardscript::ast::Statement::CommandDefaultDelay(command) => {
-                compile_simple_command(
-                    output_file,
-                    String::from("DEFAULTDELAY"),
-                    command.value.into(),
-                )?;
-            }
-            mallardscript::ast::Statement::CommandDefine(command) => {
-                compile_simple_command(output_file, String::from("DEFINE"), command.value.into())?;
-            }
-            mallardscript::ast::Statement::CommandDelay(command) => {
-                compile_simple_command(output_file, String::from("DELAY"), command.value.into())?;
-            }
-            mallardscript::ast::Statement::CommandExfil(command) => {
-                compile_simple_command(output_file, String::from("EXFIL"), command.name.into())?;
-            }
-            mallardscript::ast::Statement::CommandKey(command) => {
-                fn collect_command_key_values(
-                    command_key: mallardscript::ast::StatementCommandKey,
-                ) -> String {
-                    // Collect all command key statement command key values.
-                    let command_key_statements_reduced = command_key.statements.into_iter().fold(
-                        String::from(""),
-                        |accumulation, statement| {
-                            if let mallardscript::ast::Statement::CommandKey(
-                                statement_command_key,
-                            ) = statement
-                            {
-                                return accumulation
-                                    + &collect_command_key_values(statement_command_key);
-                            } else if let mallardscript::ast::Statement::CommandKeyValue(
-                                statement_command_key_value,
-                            ) = statement
-                            {
-                                return accumulation + &statement_command_key_value.name;
-                            }
-
-                            accumulation
-                        },
-                    );
-
-                    let command_key_remaining_keys = format!(" {}", command_key.remaining_keys);
-
-                    command_key_statements_reduced
-                        + if command_key.remaining_keys.is_empty() {
-                            ""
-                        } else {
-                            &command_key_remaining_keys
-                        }
-                }
-
-                let command_reduced = collect_command_key_values(command);
-                compile_simple_command(output_file, command_reduced, None)?;
-            }
-            mallardscript::ast::Statement::CommandRem(command) => {
-                compile_simple_command(output_file, String::from("REM"), command.value.into())?;
-            }
-            mallardscript::ast::Statement::CommandString(command) => {
-                compile_simple_command(output_file, String::from("STRING"), command.value.into())?;
-            }
-            mallardscript::ast::Statement::CommandStringln(command) => {
-                compile_simple_command(
-                    output_file,
-                    String::from("STRINGLN"),
-                    command.value.into(),
-                )?;
-            }
-            mallardscript::ast::Statement::SingleCommand(command) => {
-                compile_simple_command(output_file, command.name, None)?;
-            }
-            mallardscript::ast::Statement::VariableDeclaration(variable) => {
-                log::info!("Processing '${} = {}'.", variable.name, variable.assignment);
-
-                // Process all variable statements.
-                output_file
-                    .write_all(
-                        (format!("VAR ${} = {}\n", variable.name, variable.assignment)).as_bytes(),
-                    )
-                    .context("Unable to write to output file.")?;
-            }
-            mallardscript::ast::Statement::VariableAssignment(variable) => {
-                log::info!("Processing '${} = {}'.", variable.name, variable.assignment);
-
-                // Process all variable statements.
-                output_file
-                    .write_all(
-                        (format!("${} = {}\n", variable.name, variable.assignment)).as_bytes(),
-                    )
-                    .context("Unable to write to output file.")?;
-            }
-            mallardscript::ast::Statement::CommandImport(command) => {
-                // Compile import file.
-                // Make sure to get the current working directory so imports can resolve locally.
-                let mut new_current_directory = input_path_expanded.clone();
-                new_current_directory.pop();
-                compile_input(
-                    new_current_directory,
-                    &command.value,
-                    output_file,
-                    imports_visited,
-                )
-                .context(format!(
-                    "Unable to import file '{}' from '{}'.",
-                    command.value, input_path
-                ))?;
-
-                // Add a new line after import file compilation.
-                output_file
-                    .write_all(String::from("\n").as_bytes())
-                    .context("Unable to write to output file.")?;
-            }
-            mallardscript::ast::Statement::End { .. } => {
-                log::info!("Processing End.");
-
-                // Remove statement end line from end of file.
-                output_file
-                    .set_len(
-                        output_file
-                            .metadata()
-                            .unwrap()
-                            .len()
-                            .checked_sub("\n".len() as u64)
-                            .unwrap(),
-                    )
-                    .unwrap();
-                output_file.seek(std::io::SeekFrom::End(0))?;
-            }
-            mallardscript::ast::Statement::CommandKeyValue { .. } => {
-                return Err(anyhow!("Provided statement CommandKeyValue not supported at top level commands. These should be nested under CommandKey statements."));
-            }
-        }
-    }
 
     Ok(())
 }
