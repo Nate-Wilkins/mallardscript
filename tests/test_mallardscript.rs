@@ -97,7 +97,7 @@ fn test_command_build_duckyscript_valid_rem_string_only() -> Result<(), Box<dyn 
     // Given the CLI.
     let mut cmd = Command::cargo_bin("mallardscript")?;
 
-    // And DuckyScript file with REM commands only.
+    // And DuckyScript file with REM and STRING commands only.
     let mut input_file = NamedTempFile::new()?;
     input_file.write_all(
         String::from(
@@ -159,7 +159,7 @@ fn test_command_build_duckyscript_valid_rem_string_variable_only(
     // Given the CLI.
     let mut cmd = Command::cargo_bin("mallardscript")?;
 
-    // And DuckyScript file with REM commands only.
+    // And DuckyScript file with REM, STRING, and VAR commands only.
     let mut input_file = NamedTempFile::new()?;
     input_file.write_all(
         String::from(
