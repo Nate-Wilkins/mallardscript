@@ -51,5 +51,7 @@ Written in rust. Workflows are defined in `.envrc.sh`.
 - [Package System Binaries](https://rust-cli.github.io/book/tutorial/packaging.html)
 - Configuration file like `.mallardscriptrc`.
 - Source errors would be really nice to have.
-  Can be implemented with [miette](https://crates.io/crates/miette).
-  Also view [pest miette](https://github.com/pest-parser/pest/issues/582).
+  Can be implemented with:
+  - [miette](https://crates.io/crates/miette).
+  - [pest miette](https://github.com/pest-parser/pest/issues/582).
+  - [ariadne](https://github.com/zesterer/ariadne)?
