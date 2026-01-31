@@ -1,0 +1,4 @@
+name               = "mallardscript"
+description        = "Hak5 DuckyScript extended language compiler."
+version            = "7.0.1"
+author             = "Nate-Wilkins <nate-wilkins@code-null.com>"

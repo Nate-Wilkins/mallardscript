@@ -92,37 +92,41 @@ fn run(args: clap::ArgMatches) -> Result<()> {
 
 /// Command to output completions of a specific type to STDOUT.
 fn command_completions(args: clap::ArgMatches) -> Result<()> {
+    // NOTE: `gen_completions_to` is an immutable usage so,
+    //       we need to `create_application()` sometimes.
+    let mut app = create_application().context("Unable to create application for completions.")?;
+
     // Parse arguments.
     let args_completions = args.subcommand_matches("completions").unwrap();
     let completion_type = args_completions.value_of("type").unwrap();
 
     // Generate completion.
     if completion_type == "bash" {
-        create_application()?.gen_completions_to(
+        app.gen_completions_to(
             create_application()?.get_bin_name().unwrap(),
             clap::Shell::Bash,
             &mut std::io::stdout(),
         );
     } else if completion_type == "elvish" {
-        create_application()?.gen_completions_to(
+        app.gen_completions_to(
             create_application()?.get_bin_name().unwrap(),
             clap::Shell::Elvish,
             &mut std::io::stdout(),
         );
     } else if completion_type == "fish" {
-        create_application()?.gen_completions_to(
+        app.gen_completions_to(
             create_application()?.get_bin_name().unwrap(),
             clap::Shell::Fish,
             &mut std::io::stdout(),
         );
     } else if completion_type == "powershell" {
-        create_application()?.gen_completions_to(
+        app.gen_completions_to(
             create_application()?.get_bin_name().unwrap(),
             clap::Shell::PowerShell,
             &mut std::io::stdout(),
         );
     } else if completion_type == "zsh" {
-        create_application()?.gen_completions_to(
+        app.gen_completions_to(
             create_application()?.get_bin_name().unwrap(),
             clap::Shell::Zsh,
             &mut std::io::stdout(),

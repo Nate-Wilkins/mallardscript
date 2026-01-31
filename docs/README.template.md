@@ -1,4 +1,4 @@
-# MallardScript
+# <%{ name }%>
 
 [![Version](https://img.shields.io/crates/v/mallardscript?style=flat-square)](https://crates.io/crates/mallardscript)
 [![Build](https://img.shields.io/travis/Nate-Wilkins/mallardscript/main?style=flat-square)](https://app.travis-ci.com/github/Nate-Wilkins/mallardscript)
@@ -6,9 +6,9 @@
 [![Open Issues](https://img.shields.io/github/issues-raw/Nate-Wilkins/mallardscript?style=flat-square)](https://github.com/Nate-Wilkins/mallardscript/issues)
 [![License](https://img.shields.io/github/license/Nate-Wilkins/mallardscript?color=%2308F&style=flat-square)](https://github.com/Nate-Wilkins/mallardscript/blob/main/LICENSE)
 
-> Hak5 DuckyScript extended language compiler.
+> <%{ description }%>
 
-## Installation
+## Install
 
 ```
 cargo install mallardscript
@@ -55,3 +55,10 @@ Written in rust. Workflows are defined in `.envrc.sh`.
   - [miette](https://crates.io/crates/miette).
   - [pest miette](https://github.com/pest-parser/pest/issues/582).
   - [ariadne](https://github.com/zesterer/ariadne)?
+
+## Contributions
+
+| Author  | Estimated Hours |
+| ------------- | ------------- |
+<%#authors%>| [![<%name%>](https://github.com/<%name%>.png?size=64)](https://github.com/<%name%>) | <p align="right"><%hours%> Hours</p> |
+<%/authors%>
